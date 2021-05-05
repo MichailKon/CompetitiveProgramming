@@ -1,12 +1,12 @@
 #include <bits/stdc++.h>
 
-template<class T, class C>
+template<class T>
 class sparseTable {
 private:
     unsigned int size;
     std::vector <std::vector<T>> table;
     std::vector<int> logs;
-    C *function;
+    std::function<T(const T, const T)> function;
 
     void fillLogs() {
         logs.assign(size + 1, 0);
@@ -42,7 +42,7 @@ public:
         fillTable();
     }
 
-    sparseTable(const C &function) : function(function), size(0) {}
+    sparseTable(const std::function<T(const T, const T)> &function) : function(function), size(0) {}
 
     sparseTable() : function([](const T &a, const T &b) { return std::min(a, b); }), size(0) {}
 
@@ -57,16 +57,19 @@ public:
 };
 
 int f(const int &a, const int &b) {
-    return std::min(a, b);
+	return std::max(a, b);
 }
 
 int main() {
-//	std::vector<int> a = { 1, 2, 3, 2, 5 };
+	//	std::vector<int> a = { 1, 2, 3, 2, 5 };
     int a[] = {1, 2, 3, 2, 5};
 
-    sparseTable<int, decltype(f)> st(f);
-//	st.build(a.begin(), a.end());
-    st.build(a, a + 5);
+    sparseTable<int> st1;
+    sparseTable<int> st2([](const int &a, const int &b) { return std::max(a, b); });
+    sparseTable<int> st3(f);
 
-    std::cout << st.get(0, 1) << '\n';
+	//	st.build(a.begin(), a.end());
+    st1.build(a, a + 5);
+
+    std::cout << st1.get(0, 1) << '\n';
 }
