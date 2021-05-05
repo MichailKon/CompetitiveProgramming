@@ -1,27 +1,23 @@
 #include <bits/stdc++.h>
 
-template<class T>
+template<class T, int N>
 class sparseTable {
 private:
-    unsigned int size;
-    std::vector <std::vector<T>> table;
-    std::vector<int> logs;
+    std::size_t size;
+    int logs[N + 1];
+    std::vector<std::array<T, N>> table;
     std::function<T(const T, const T)> function;
 
-    void fillLogs() {
-        logs.assign(size + 1, 0);
-        logs.shrink_to_fit();
+    constexpr inline void fillLogs() {
         logs[1] = 0;
         for (int i = 2; i <= size; i++) {
             logs[i] = logs[i >> 1] + 1;
         }
     }
 
-    void fillTable() {
+    void inline fillTable() {
         for (int k = 1; k <= logs[size]; k++) {
-            unsigned int nowSize = table[k - 1].size() - (1 << (k - 1));
-            table[k].resize(nowSize);
-            table[k].shrink_to_fit();
+            std::size_t nowSize = table[k - 1].size() - (1 << (k - 1));
             for (int i = 0; i < nowSize; i++) {
                 table[k][i] = function(table[k - 1][i], table[k - 1][i + (1 << (k - 1))]);
             }
@@ -29,47 +25,48 @@ private:
     }
 
 public:
-    template<typename _RandomAccessIterator>
-    void build(const _RandomAccessIterator begin, const _RandomAccessIterator end) {
+    template<typename ForwardIterator>
+    void build(ForwardIterator begin, ForwardIterator end) {
         // build logs
-        size = end - begin;
+        size = std::distance(begin, end);
         fillLogs();
         // build table
         table.resize(logs[size] + 1);
-        table[0].resize(size);
-        table[0].shrink_to_fit();
-        for (int i = 0; i < size; i++) table[0][i] = *(begin + i);
+        std::copy(begin, end, table[0].begin());
         fillTable();
     }
 
-    sparseTable(const std::function<T(const T, const T)> &function) : function(function), size(0) {}
+    explicit sparseTable(std::function<T(const T, const T)> function) : function(std::move(function)), size(0) {}
 
     sparseTable() : function([](const T &a, const T &b) { return std::min(a, b); }), size(0) {}
 
-    unsigned int getSize() const {
+    size_t inline getSize() const {
         return size;
     }
 
-    T get(const int &l, const int &r) const {
-        int k = logs[r - l + 1];
+    T inline get(const int &l, const int &r) const {
+        int k = logs[r - l];
         return function(table[k][l], table[k][r - (1 << k) + 1]);
     }
 };
 
 int f(const int &a, const int &b) {
-	return std::max(a, b);
+    return std::max(a, b);
 }
 
 int main() {
-	//	std::vector<int> a = { 1, 2, 3, 2, 5 };
-    int a[] = {1, 2, 3, 2, 5};
+    // std::vector<int> a = { 1, 2, 3, 2, 5 };
+    // int a[] = { 1, 2, 3, 2, 5 };
+    std::forward_list<int> a;
+    a.assign({1, 2, 3, 4, 5});
 
-    sparseTable<int> st1;
-    sparseTable<int> st2([](const int &a, const int &b) { return std::max(a, b); });
-    sparseTable<int> st3(f);
+    sparseTable<int, 5> st1;
+    sparseTable<int, 5> st2([](const int &a, const int &b) { return std::max(a, b); });
+    sparseTable<int, 5> st3(f);
 
-	//	st.build(a.begin(), a.end());
-    st1.build(a, a + 5);
+    // st1.build(a.begin(), a.end());
+    // st1.build(a, a + 5);
+    st1.build(a.begin(), a.end());
 
-    std::cout << st1.get(0, 1) << '\n';
+    std::cout << st1.get(0, 3) << '\n';
 }
